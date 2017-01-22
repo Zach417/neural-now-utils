@@ -5,7 +5,7 @@ var corpus = fs.readFileSync(__dirname + "/corpus.txt", "utf-8");
 ngrams.bigrams(function (bigrams) {
   var vector = [];
   for (var i = 0; i < bigrams.length; i++) {
-    var count = countChar(bigrams[i], corpus);
+    var count = utils.countChar(bigrams[i], corpus);
     vector.push(count);
   }
 });
