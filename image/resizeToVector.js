@@ -3,7 +3,6 @@ var path = require('path');
 var cnn = require('neural-now-cnn');
 var png = require('png-js');
 var jpg = require('jpeg-js');
-var sizeOf = require('image-size');
 var resize = require('./resizeArray');
 
 function getVol (width, height, depth, x) {
@@ -43,28 +42,14 @@ function resizeToVector (options) {
 
     var vol = getVol(width, height, depth, outputPixels);
     options.callback(vol);
-    return;
-  }
+  } else if (options.path) {
+    // must require here for front-end/browser support
+    var sizeOf = require('image-size');
+    var imageData = fs.readFileSync(options.path);
+    var fromSize = sizeOf(options.path);
 
-  var imageData = fs.readFileSync(options.path);
-  var fromSize = sizeOf(options.path);
-
-  if (options.path.endsWith(".jpg")) {
-    var inputPixels = jpg.decode(imageData, true).data;
-    var outputPixels = resize({
-      src: inputPixels,
-      width: fromSize.width,
-      height: fromSize.height,
-      toWidth: width,
-      toHeight: height,
-      alpha: true,
-    });
-
-    var vol = getVol(width, height, depth, outputPixels);
-    options.callback(vol);
-  } else if (options.path.endsWith(".png")) {
-    var imageBuffer = new png(imageData);
-    imageBuffer.decode(function (inputPixels) {
+    if (options.path.endsWith(".jpg")) {
+      var inputPixels = jpg.decode(imageData, true).data;
       var outputPixels = resize({
         src: inputPixels,
         width: fromSize.width,
@@ -76,7 +61,22 @@ function resizeToVector (options) {
 
       var vol = getVol(width, height, depth, outputPixels);
       options.callback(vol);
-    });
+    } else if (options.path.endsWith(".png")) {
+      var imageBuffer = new png(imageData);
+      imageBuffer.decode(function (inputPixels) {
+        var outputPixels = resize({
+          src: inputPixels,
+          width: fromSize.width,
+          height: fromSize.height,
+          toWidth: width,
+          toHeight: height,
+          alpha: true,
+        });
+
+        var vol = getVol(width, height, depth, outputPixels);
+        options.callback(vol);
+      });
+    }
   }
 }
 
