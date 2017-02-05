@@ -1,6 +1,6 @@
 {
   "name": "neural-now-utils",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -9,7 +9,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "lwip": "0.0.9",
+    "image-size": "^0.5.1",
+    "jpeg-js": "^0.2.0",
+    "neural-now-cnn": "^0.1.1",
     "png-js": "^0.1.1"
   }
 }

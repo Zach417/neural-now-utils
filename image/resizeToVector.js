@@ -2,13 +2,13 @@ var fs = require('fs');
 var path = require('path');
 var cnn = require('neural-now-cnn');
 var png = require('png-js');
-var lwip = require('lwip');
+var jpg = require('jpeg-js');
+var sizeOf = require('image-size');
+var resize = require('./resizeArray');
 
 function getVol (width, height, depth, x) {
   var vol = new cnn.vol(width, height, depth, 0);
-
-  var j = 0;
-  for(var dc = 0; dc < depth; dc++) {
+  for (var dc = 0; dc < depth; dc++) {
     var i = 0;
     for(var xc = 0; xc < width; xc++) {
       for(var yc = 0; yc < height; yc++) {
@@ -22,37 +22,62 @@ function getVol (width, height, depth, x) {
   return vol;
 }
 
-function pathToVector (options) {
+function resizeToVector (options) {
   var width = options.size[0];
   var height = options.size[1];
   var depth = options.size[2];
 
-  lwip.open(options.path, function (err, image) {
-    if (err) { throw err; }
-    image.batch()
-      .resize(width, height)
-      .toBuffer("png", function (err, buffer) {
-        if (err) { throw err; }
-        var img = new png(buffer);
-        img.decode(function (pixels) {
-          var vol = getVol(width, height, depth, pixels);
-          options.callback(vol);
-        });
+  if (options.data) {
+    var fromWidth = options.fromSize[0];
+    var fromHeight = options.fromSize[1];
+
+    var inputPixels = options.data;
+    var outputPixels = resize({
+      src: inputPixels,
+      width: fromWidth,
+      height: fromHeight,
+      toWidth: width,
+      toHeight: height,
+      alpha: true,
+    });
+
+    var vol = getVol(width, height, depth, outputPixels);
+    options.callback(vol);
+    return;
+  }
+
+  var imageData = fs.readFileSync(options.path);
+  var fromSize = sizeOf(options.path);
+
+  if (options.path.endsWith(".jpg")) {
+    var inputPixels = jpg.decode(imageData, true).data;
+    var outputPixels = resize({
+      src: inputPixels,
+      width: fromSize.width,
+      height: fromSize.height,
+      toWidth: width,
+      toHeight: height,
+      alpha: true,
+    });
+
+    var vol = getVol(width, height, depth, outputPixels);
+    options.callback(vol);
+  } else if (options.path.endsWith(".png")) {
+    var imageBuffer = new png(imageData);
+    imageBuffer.decode(function (inputPixels) {
+      var outputPixels = resize({
+        src: inputPixels,
+        width: fromSize.width,
+        height: fromSize.height,
+        toWidth: width,
+        toHeight: height,
+        alpha: true,
       });
-  });
-}
 
-// Image data from HTML canvas
-function imgDataToVector (options) {
-  throw "Canvas data imput not implemented";
-}
-
-module.exports = function (options) {
-  if (options.path) {
-    pathToVector(options);
-  } else if (options.data) {
-    imgDataToVector(options);
-  } else {
-    throw "Parameter type not implemented";
+      var vol = getVol(width, height, depth, outputPixels);
+      options.callback(vol);
+    });
   }
 }
+
+module.exports = resizeToVector;
