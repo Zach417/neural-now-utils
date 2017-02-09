@@ -45,7 +45,7 @@ function resizeToVector (options) {
     });
 
     var vol = getVol(width, height, depth, outputPixels, options.normalize);
-    options.callback(vol);
+    options.callback(Array.prototype.slice.call(vol.w));
   } else if (options.path) {
     // must require here for front-end/browser support
     var sizeOf = require('image-size');
@@ -64,7 +64,7 @@ function resizeToVector (options) {
       });
 
       var vol = getVol(width, height, depth, outputPixels, options.normalize);
-      options.callback(vol);
+      options.callback(Array.prototype.slice.call(vol.w));
     } else if (options.path.endsWith(".png")) {
       var imageBuffer = new png(imageData);
       imageBuffer.decode(function (inputPixels) {

@@ -13,6 +13,6 @@ Utils.Image.resizeToVector({
   size: [32, 32, 3],
   path: __dirname + "/test.jpg",
   callback: function (vol) {
-    console.log(vol.w.length);
+    console.log(vol.length);
   },
 });
