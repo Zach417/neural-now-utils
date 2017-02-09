@@ -12,7 +12,7 @@ function getVol (width, height, depth, x) {
     for(var xc = 0; xc < width; xc++) {
       for(var yc = 0; yc < height; yc++) {
         var ix = i * 4 + dc;
-        vol.set(yc, xc, dc, (x[ix] / 255.0 - 0.5));
+        vol.set(yc, xc, dc, x[ix]);
         i++;
       }
     }
@@ -74,7 +74,7 @@ function resizeToVector (options) {
         });
 
         var vol = getVol(width, height, depth, outputPixels);
-        options.callback(vol);
+        options.callback(Array.prototype.slice.call(vol.w));
       });
     }
   }
