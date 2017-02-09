@@ -5,14 +5,18 @@ var png = require('png-js');
 var jpg = require('jpeg-js');
 var resize = require('./resizeArray');
 
-function getVol (width, height, depth, x) {
+function getVol (width, height, depth, x, normalize) {
   var vol = new cnn.vol(width, height, depth, 0);
   for (var dc = 0; dc < depth; dc++) {
     var i = 0;
     for(var xc = 0; xc < width; xc++) {
       for(var yc = 0; yc < height; yc++) {
         var ix = i * 4 + dc;
-        vol.set(yc, xc, dc, x[ix]);
+        if (normalize === true) {
+          vol.set(yc, xc, dc, ((x[ix] / 255.0) - 0.5));
+        } else {
+          vol.set(yc, xc, dc, x[ix]);
+        }
         i++;
       }
     }
@@ -40,7 +44,7 @@ function resizeToVector (options) {
       alpha: true,
     });
 
-    var vol = getVol(width, height, depth, outputPixels);
+    var vol = getVol(width, height, depth, outputPixels, options.normalize);
     options.callback(vol);
   } else if (options.path) {
     // must require here for front-end/browser support
@@ -59,7 +63,7 @@ function resizeToVector (options) {
         alpha: true,
       });
 
-      var vol = getVol(width, height, depth, outputPixels);
+      var vol = getVol(width, height, depth, outputPixels, options.normalize);
       options.callback(vol);
     } else if (options.path.endsWith(".png")) {
       var imageBuffer = new png(imageData);
@@ -73,7 +77,7 @@ function resizeToVector (options) {
           alpha: true,
         });
 
-        var vol = getVol(width, height, depth, outputPixels);
+        var vol = getVol(width, height, depth, outputPixels, options.normalize);
         options.callback(Array.prototype.slice.call(vol.w));
       });
     }
